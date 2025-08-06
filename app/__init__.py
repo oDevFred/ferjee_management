@@ -39,10 +39,17 @@ def create_app():
     login_manager.init_app(app)
     
     # Configurar o Flask-Login
+    login_manager.login_view = 'main.login'
+    login_manager.login_message = 'Por favor, faça login para acessar esta página.'
+    login_manager.login_message_category = 'info'
+    
     @login_manager.user_loader
     def load_user(user_id):
-        from .models import Aluno
-        return Aluno.query.get(int(user_id))
+        from .models import Usuario
+        user = Usuario.query.get(int(user_id))
+        if user:
+            print(f"🔐 Carregando usuário: {user.username}")
+        return user
     
     # Não criar as tabelas automaticamente aqui
     # Elas serão criadas pelo script init_db.py

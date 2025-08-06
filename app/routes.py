@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_wtf.csrf import generate_csrf
+from flask_login import login_user, logout_user, login_required, current_user
 from . import db
-from .models import Aluno
+from .models import Aluno, Usuario
 from .forms import FormAluno
+from .auth_forms import FormLogin, FormRegistro
 from sqlalchemy import func
 
 bp = Blueprint('main', __name__)
@@ -17,7 +19,73 @@ def health_check():
     print("❤️ Verificação de saúde do sistema")
     return {'status': 'ok', 'message': 'Sistema operacional'}
 
+@bp.route('/login', methods=['GET', 'POST'])
+def login():
+    print("🔐 Acessando página de login")
+    
+    if current_user.is_authenticated:
+        print(f"👤 Usuário já autenticado: {current_user.username}")
+        return redirect(url_for('main.listar_alunos'))
+    
+    form = FormLogin()
+    
+    if form.validate_on_submit():
+        print("📝 Formulário de login validado")
+        usuario = Usuario.query.filter_by(username=form.username.data).first()
+        
+        if usuario and usuario.check_senha(form.senha.data):
+            print(f"✅ Login bem-sucedido para o usuário: {usuario.username}")
+            login_user(usuario, remember=form.lembrar_me.data)
+            usuario.ultimo_login = datetime.utcnow()
+            db.session.commit()
+            
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('main.listar_alunos'))
+        else:
+            print("❌ Falha no login: usuário ou senha inválidos")
+            flash('Usuário ou senha inválidos', 'danger')
+    
+    return render_template('auth/login.html', form=form)
+
+@bp.route('/logout')
+@login_required
+def logout():
+    print(f"🚪 Usuário {current_user.username} fazendo logout")
+    logout_user()
+    flash('Você saiu do sistema', 'info')
+    return redirect(url_for('main.login'))
+
+@bp.route('/registrar', methods=['GET', 'POST'])
+def registrar():
+    print("📝 Acessando página de registro")
+    
+    if current_user.is_authenticated:
+        print(f"👤 Usuário já autenticado: {current_user.username}")
+        return redirect(url_for('main.listar_alunos'))
+    
+    form = FormRegistro()
+    
+    if form.validate_on_submit():
+        print("📝 Formulário de registro validado")
+        
+        usuario = Usuario(
+            username=form.username.data,
+            email=form.email.data,
+            nome_completo=form.nome_completo.data
+        )
+        usuario.set_senha(form.senha.data)
+        
+        db.session.add(usuario)
+        db.session.commit()
+        
+        print(f"✅ Usuário {usuario.username} registrado com sucesso")
+        flash('Conta criada com sucesso! Faça login para continuar.', 'success')
+        return redirect(url_for('main.login'))
+    
+    return render_template('auth/registrar.html', form=form)
+
 @bp.route('/alunos')
+@login_required
 def listar_alunos():
     print("📋 Listando todos os alunos")
     
@@ -42,6 +110,7 @@ def listar_alunos():
         return f"Erro ao carregar página: {str(e)}", 500
 
 @bp.route('/relatorios')
+@login_required
 def relatorios():
     print("📊 Acessando página de relatórios")
     
@@ -92,6 +161,7 @@ def relatorios():
         return f"Erro ao gerar relatórios: {str(e)}", 500
 
 @bp.route('/alunos/<int:id>/dados')
+@login_required
 def get_aluno_dados(id):
     print(f"📤 Buscando dados do aluno ID: {id}")
     aluno = Aluno.query.get_or_404(id)
@@ -117,6 +187,7 @@ def get_aluno_dados(id):
     })
 
 @bp.route('/alunos/novo', methods=['GET', 'POST'])
+@login_required
 def novo_aluno():
     print("➕ Processando novo aluno")
     form = FormAluno()
@@ -164,6 +235,7 @@ def novo_aluno():
     return render_template('alunos/novo.html', form=form)
 
 @bp.route('/alunos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editar_aluno(id):
     print(f"✏️ Processando edição do aluno ID: {id}")
     aluno = Aluno.query.get_or_404(id)
@@ -209,6 +281,7 @@ def editar_aluno(id):
     return render_template('alunos/editar.html', form=form, aluno=aluno)
 
 @bp.route('/alunos/<int:id>/excluir', methods=['POST'])
+@login_required
 def excluir_aluno(id):
     print(f"🗑️ Processando exclusão do aluno ID: {id}")
     aluno = Aluno.query.get_or_404(id)
