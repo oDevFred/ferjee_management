@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask_wtf.csrf import generate_csrf
 from . import db
 from .models import Aluno
 from .forms import FormAluno
@@ -18,10 +19,26 @@ def health_check():
 @bp.route('/alunos')
 def listar_alunos():
     print("📋 Listando todos os alunos")
-    alunos = Aluno.query.all()
-    print(f"🔢 Encontrados {len(alunos)} aluno(s) no banco de dados")
-    form_novo = FormAluno()
-    return render_template('alunos/listar.html', alunos=alunos, form_novo=form_novo)
+    
+    try:
+        alunos = Aluno.query.all()
+        print(f"🔢 Encontrados {len(alunos)} aluno(s) no banco de dados")
+        
+        # Imprimir informações sobre cada aluno
+        for aluno in alunos:
+            print(f"👤 Aluno: {aluno.nome} (ID: {aluno.id})")
+        
+        form_novo = FormAluno()
+        print("✅ Formulário criado com sucesso")
+        
+        print("📝 Renderizando template listar.html")
+        return render_template('alunos/listar.html', alunos=alunos, form_novo=form_novo)
+        
+    except Exception as e:
+        print(f"❌ Erro ao listar alunos: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Erro ao carregar página: {str(e)}", 500
 
 @bp.route('/alunos/<int:id>/dados')
 def get_aluno_dados(id):
