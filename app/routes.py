@@ -123,11 +123,10 @@ def novo_aluno():
     
     if form.validate_on_submit():
         print("📝 Formulário validado com sucesso!")
-        print(f"👤 Dados do aluno: {form.nome.data} (Matrícula: {form.matricula.data})")
+        print(f"👤 Dados do aluno: {form.nome.data}")
         
-        # Criar novo aluno
+        # Criar novo aluno (matrícula será gerada automaticamente)
         aluno = Aluno(
-            matricula=form.matricula.data,
             nome=form.nome.data,
             rg=form.rg.data,
             cpf=form.cpf.data,
@@ -146,12 +145,12 @@ def novo_aluno():
         print("💾 Salvando aluno no banco de dados...")
         db.session.add(aluno)
         db.session.commit()
-        print("✅ Aluno salvo com sucesso!")
+        print(f"✅ Aluno salvo com sucesso! Matrícula gerada: {aluno.matricula}")
         
         if request.is_json:
-            return jsonify({'success': True})
+            return jsonify({'success': True, 'matricula': aluno.matricula})
         
-        flash('Aluno cadastrado com sucesso!', 'success')
+        flash(f'Aluno cadastrado com sucesso! Matrícula: {aluno.matricula}', 'success')
         return redirect(url_for('main.listar_alunos'))
     
     if request.method == 'POST':
@@ -172,10 +171,9 @@ def editar_aluno(id):
     
     if form.validate_on_submit():
         print("📝 Formulário de edição validado com sucesso!")
-        print(f"👤 Atualizando dados do aluno: {form.nome.data} (Matrícula: {form.matricula.data})")
+        print(f"👤 Atualizando dados do aluno: {form.nome.data} (Matrícula: {aluno.matricula})")
         
-        # Atualizar dados do aluno
-        aluno.matricula = form.matricula.data
+        # Atualizar dados do aluno (matrícula não pode ser alterada)
         aluno.nome = form.nome.data
         aluno.rg = form.rg.data
         aluno.cpf = form.cpf.data

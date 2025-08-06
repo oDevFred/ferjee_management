@@ -90,12 +90,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                {{ form_novo.matricula.label(class="form-label") }}
-                                {{ form_novo.matricula(class="form-control") }}
-                                <div class="text-danger" id="erro-matricula"></div>
-                            </div>
-                            
-                            <div class="mb-3">
                                 {{ form_novo.nome.label(class="form-label") }}
                                 {{ form_novo.nome(class="form-control") }}
                                 <div class="text-danger" id="erro-nome"></div>
@@ -109,8 +103,9 @@
                             
                             <div class="mb-3">
                                 {{ form_novo.cpf.label(class="form-label") }}
-                                {{ form_novo.cpf(class="form-control") }}
+                                {{ form_novo.cpf(class="form-control", id="cpf-input") }}
                                 <div class="text-danger" id="erro-cpf"></div>
+                                <small class="text-muted" id="cpf-validacao"></small>
                             </div>
                             
                             <div class="mb-3">
@@ -380,6 +375,77 @@
 <script>
 let alunoIdParaExcluir = null;
 
+// Função para validar CPF
+function validarCPF(cpf) {
+    // Remover caracteres não numéricos
+    cpf = cpf.replace(/\D/g, '');
+    
+    if (cpf.length !== 11) {
+        return false;
+    }
+    
+    // Verificar se todos os dígitos são iguais
+    if (/^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+    
+    // Cálculo do primeiro dígito verificador
+    let soma = 0;
+    for (let i = 0; i < 9; i++) {
+        soma += parseInt(cpf[i]) * (10 - i);
+    }
+    let resto = 11 - (soma % 11);
+    let digito1 = resto === 10 || resto === 11 ? 0 : resto;
+    
+    // Cálculo do segundo dígito verificador
+    soma = 0;
+    for (let i = 0; i < 10; i++) {
+        soma += parseInt(cpf[i]) * (11 - i);
+    }
+    resto = 11 - (soma % 11);
+    let digito2 = resto === 10 || resto === 11 ? 0 : resto;
+    
+    // Verificar se os dígitos verificadores estão corretos
+    return parseInt(cpf[9]) === digito1 && parseInt(cpf[10]) === digito2;
+}
+
+// Formatar CPF enquanto digita
+function formatarCPF(cpf) {
+    cpf = cpf.replace(/\D/g, '');
+    cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+    cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
+    cpf = cpf.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    return cpf;
+}
+
+// Adicionar evento de input ao campo CPF
+document.addEventListener('DOMContentLoaded', function() {
+    const cpfInput = document.getElementById('cpf-input');
+    const cpfValidacao = document.getElementById('cpf-validacao');
+    
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function(e) {
+            let valor = e.target.value;
+            
+            // Formatar CPF
+            e.target.value = formatarCPF(valor);
+            
+            // Validar CPF
+            if (valor.length >= 11) {
+                if (validarCPF(valor)) {
+                    cpfValidacao.textContent = '✅ CPF válido';
+                    cpfValidacao.className = 'text-success';
+                } else {
+                    cpfValidacao.textContent = '❌ CPF inválido';
+                    cpfValidacao.className = 'text-danger';
+                }
+            } else {
+                cpfValidacao.textContent = '';
+            }
+        });
+    }
+});
+
 function abrirModalEditar(id) {
     console.log(`📝 Abrindo modal de edição para o aluno ID: ${id}`);
     
@@ -389,7 +455,6 @@ function abrirModalEditar(id) {
         .then(data => {
             // Preencher o formulário com os dados do aluno
             document.getElementById('editar-aluno-id').value = data.id;
-            document.getElementById('editar-matricula').value = data.matricula;
             document.getElementById('editar-nome').value = data.nome;
             document.getElementById('editar-rg').value = data.rg || '';
             document.getElementById('editar-cpf').value = data.cpf || '';
@@ -460,6 +525,9 @@ function salvarNovoAluno() {
             // Fechar o modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('novoAlunoModal'));
             modal.hide();
+            
+            // Mostrar mensagem com a matrícula gerada
+            alert(`Aluno cadastrado com sucesso!\nMatrícula: ${data.matricula}`);
             
             // Recarregar a página
             window.location.reload();
