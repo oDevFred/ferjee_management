@@ -59,15 +59,41 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// Dados para o gráfico de estados
+const estadoLabels = [
+    {% for estado, total in alunos_por_estado %}
+        '{{ estado }}',
+    {% endfor %}
+];
+
+const estadoData = [
+    {% for estado, total in alunos_por_estado %}
+        {{ total }},
+    {% endfor %}
+];
+
+// Dados para o gráfico de meses
+const mesLabels = [
+    {% for mes, total in alunos_por_mes %}
+        '{{ mes }}',
+    {% endfor %}
+];
+
+const mesData = [
+    {% for mes, total in alunos_por_mes %}
+        {{ total }},
+    {% endfor %}
+];
+
 // Gráfico de Alunos por Estado
 const estadoCtx = document.getElementById('estadoChart').getContext('2d');
 const estadoChart = new Chart(estadoCtx, {
     type: 'bar',
     data: {
-        labels: [{% for estado, total in alunos_por_estado %}'{{ estado }}',{% endfor %}],
+        labels: estadoLabels,
         datasets: [{
             label: 'Quantidade de Alunos',
-            data: [{% for estado, total in alunos_por_estado %}{{ total }},{% endfor %}],
+            data: estadoData,
             backgroundColor: 'rgba(54, 162, 235, 0.5)',
             borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 1
@@ -88,10 +114,10 @@ const mesCtx = document.getElementById('mesChart').getContext('2d');
 const mesChart = new Chart(mesCtx, {
     type: 'line',
     data: {
-        labels: [{% for mes, total in alunos_por_mes %}'{{ mes }}',{% endfor %}],
+        labels: mesLabels,
         datasets: [{
             label: 'Novos Alunos',
-            data: [{% for mes, total in alunos_por_mes %}{{ total }},{% endfor %}],
+            data: mesData,
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 2,

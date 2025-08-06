@@ -20,12 +20,16 @@ with app.app_context():
     
     if 'matricula' not in columns:
         print("➕ Adicionando coluna 'matricula' à tabela 'aluno'...")
-        # Adicionar a coluna matricula
-        db.engine.execute('ALTER TABLE aluno ADD COLUMN matricula VARCHAR(20)')
+        # Usar a conexão direta do SQLAlchemy
+        with db.engine.connect() as connection:
+            connection.execute(db.text("ALTER TABLE aluno ADD COLUMN matricula VARCHAR(20)"))
+            connection.commit()
         print("✅ Coluna 'matricula' adicionada com sucesso!")
         
         # Adicionar constraint UNIQUE
-        db.engine.execute('CREATE UNIQUE INDEX idx_aluno_matricula ON aluno (matricula)')
+        with db.engine.connect() as connection:
+            connection.execute(db.text("CREATE UNIQUE INDEX idx_aluno_matricula ON aluno (matricula)"))
+            connection.commit()
         print("✅ Constraint UNIQUE adicionada à coluna 'matricula'!")
         
         # Gerar matrículas para alunos existentes

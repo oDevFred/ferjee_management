@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from sqlalchemy import text
 from dotenv import load_dotenv
 import os
 
@@ -10,12 +11,10 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 
 def create_app():
-    print("🚀 Inicializando aplicação Flask...")
     app = Flask(__name__)
     
     # Configurações
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave-secreta-padrao')
-    print("🔑 Configurando chave secreta da aplicação")
     
     # Configuração do banco de dados com caminho absoluto
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -32,18 +31,16 @@ def create_app():
     # Configurar URI do banco de dados
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_file}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
     print(f"💾 Usando banco de dados em: {app.config['SQLALCHEMY_DATABASE_URI']}")
     
     # Inicializar extensões
-    print("🔧 Inicializando extensões Flask...")
     db.init_app(app)
     login_manager.init_app(app)
-    print("✅ Extensões inicializadas com sucesso!")
     
     # Configurar o Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
-        print(f"🔐 Carregando usuário com ID: {user_id}")
         from .models import Aluno
         return Aluno.query.get(int(user_id))
     
@@ -51,10 +48,7 @@ def create_app():
     # Elas serão criadas pelo script init_db.py
     
     # Registrar blueprints
-    print("📋 Registrando blueprints...")
     from . import routes
     app.register_blueprint(routes.bp)
-    print("✅ Blueprint registrado com sucesso!")
     
-    print("🎉 Aplicação configurada com sucesso!")
     return app
