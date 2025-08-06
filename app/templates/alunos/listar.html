@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Listar Alunos - FERJEE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Lista de Alunos</h2>
+    
+    {% if alunos %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Email</th>
+                    <th>Telefone</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for aluno in alunos %}
+                <tr>
+                    <td>{{ aluno.id }}</td>
+                    <td>{{ aluno.nome }}</td>
+                    <td>{{ aluno.cpf }}</td>
+                    <td>{{ aluno.email }}</td>
+                    <td>{{ aluno.telefone }}</td>
+                    <td>
+                        {% if aluno.ativo %}
+                            <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inativo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">
+            Nenhum aluno cadastrado no sistema.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -24,9 +24,11 @@ def create_app():
     # Configurar o Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
-        # Por enquanto, vamos retornar None, pois ainda não temos um modelo de usuário completo
-        # Vamos implementar isso corretamente quando criarmos o modelo de usuário
-        return None
+        return Aluno.query.get(int(user_id))
+    
+    # Criar as tabelas do banco de dados
+    with app.app_context():
+        db.create_all()
     
     # Registrar blueprints
     from . import routes
