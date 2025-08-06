@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from dotenv import load_dotenv
 import os
-import sys
 
 load_dotenv()
 
@@ -44,13 +43,8 @@ def create_app():
         from .models import Aluno
         return Aluno.query.get(int(user_id))
     
-    # Criar as tabelas do banco de dados
-    with app.app_context():
-        try:
-            db.create_all()
-            print("Tabelas criadas com sucesso!")
-        except Exception as e:
-            print(f"Erro ao criar tabelas: {e}")
+    # Não criar as tabelas automaticamente aqui
+    # Elas serão criadas pelo script init_db.py
     
     # Registrar blueprints
     from . import routes
