@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Relatórios - FERJEE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📊 Relatórios e Estatísticas</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total de Alunos</h5>
+                    <h2>{{ total_alunos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Alunos Ativos</h5>
+                    <h2>{{ alunos_ativos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Alunos Inativos</h5>
+                    <h2>{{ alunos_inativos }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📍 Alunos por Estado</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="estadoChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📅 Alunos por Mês de Cadastro</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="mesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Gráfico de Alunos por Estado
+const estadoCtx = document.getElementById('estadoChart').getContext('2d');
+const estadoChart = new Chart(estadoCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for estado, total in alunos_por_estado %}'{{ estado }}',{% endfor %}],
+        datasets: [{
+            label: 'Quantidade de Alunos',
+            data: [{% for estado, total in alunos_por_estado %}{{ total }},{% endfor %}],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Gráfico de Alunos por Mês
+const mesCtx = document.getElementById('mesChart').getContext('2d');
+const mesChart = new Chart(mesCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for mes, total in alunos_por_mes %}'{{ mes }}',{% endfor %}],
+        datasets: [{
+            label: 'Novos Alunos',
+            data: [{% for mes, total in alunos_por_mes %}{{ total }},{% endfor %}],
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

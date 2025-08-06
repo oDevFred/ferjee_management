@@ -3,6 +3,7 @@ from flask_wtf.csrf import generate_csrf
 from . import db
 from .models import Aluno
 from .forms import FormAluno
+from sqlalchemy import func
 
 bp = Blueprint('main', __name__)
 
@@ -39,6 +40,56 @@ def listar_alunos():
         import traceback
         traceback.print_exc()
         return f"Erro ao carregar página: {str(e)}", 500
+
+@bp.route('/relatorios')
+def relatorios():
+    print("📊 Acessando página de relatórios")
+    
+    try:
+        # Total de alunos
+        total_alunos = Aluno.query.count()
+        print(f"🔢 Total de alunos: {total_alunos}")
+        
+        # Total de alunos ativos
+        alunos_ativos = Aluno.query.filter_by(ativo=True).count()
+        print(f"✅ Alunos ativos: {alunos_ativos}")
+        
+        # Total de alunos inativos
+        alunos_inativos = Aluno.query.filter_by(ativo=False).count()
+        print(f"❌ Alunos inativos: {alunos_inativos}")
+        
+        # Alunos por estado
+        alunos_por_estado = db.session.query(
+            Aluno.estado,
+            func.count(Aluno.id).label('total')
+        ).group_by(Aluno.estado).all()
+        print("📍 Distribuição por estado:")
+        for estado, total in alunos_por_estado:
+            print(f"   {estado}: {total}")
+        
+        # Alunos por mês de cadastro
+        alunos_por_mes = db.session.query(
+            func.strftime('%Y-%m', Aluno.data_criacao).label('mes'),
+            func.count(Aluno.id).label('total')
+        ).group_by(func.strftime('%Y-%m', Aluno.data_criacao)).all()
+        print("📅 Distribuição por mês:")
+        for mes, total in alunos_por_mes:
+            print(f"   {mes}: {total}")
+        
+        return render_template(
+            'relatorios.html',
+            total_alunos=total_alunos,
+            alunos_ativos=alunos_ativos,
+            alunos_inativos=alunos_inativos,
+            alunos_por_estado=alunos_por_estado,
+            alunos_por_mes=alunos_por_mes
+        )
+        
+    except Exception as e:
+        print(f"❌ Erro ao gerar relatórios: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Erro ao gerar relatórios: {str(e)}", 500
 
 @bp.route('/alunos/<int:id>/dados')
 def get_aluno_dados(id):
