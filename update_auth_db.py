@@ -18,7 +18,8 @@ with app.app_context():
         admin = Usuario(
             username='admin',
             email='admin@ferjee.org',
-            nome_completo='Administrador do Sistema'
+            nome_completo='Administrador do Sistema',
+            is_admin=True
         )
         admin.set_senha('admin123')  # Senha padrão
         db.session.add(admin)
@@ -28,6 +29,12 @@ with app.app_context():
         print("🔑 Senha: admin123")
         print("⚠️  Por favor, altere a senha após o primeiro login!")
     else:
-        print("ℹ️ Usuário administrador já existe")
+        # Garantir que o usuário existente seja admin
+        if not admin.is_admin:
+            admin.is_admin = True
+            db.session.commit()
+            print("✅ Usuário admin atualizado para ser administrador!")
+        else:
+            print("ℹ️ Usuário administrador já existe")
     
     print("🎉 Atualização do banco de dados concluída!")

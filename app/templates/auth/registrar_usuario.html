@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Registrar - FERJEE{% endblock %}
+{% block title %}Registrar Usuário - FERJEE{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
             <div class="card">
-                <div class="card-header text-center">
-                    <h3><i class="fas fa-user-plus"></i> Registrar Nova Conta</h3>
+                <div class="card-header">
+                    <h3><i class="fas fa-user-plus"></i> Registrar Novo Usuário</h3>
                 </div>
                 <div class="card-body">
                     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -82,15 +82,13 @@
                             {% endif %}
                         </div>
                         
-                        <div class="d-grid">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.listar_usuarios') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
-                    
-                    <hr>
-                    <div class="text-center">
-                        <p>Já tem uma conta? <a href="{{ url_for('main.login') }}">Faça login</a></p>
-                    </div>
                 </div>
             </div>
         </div>

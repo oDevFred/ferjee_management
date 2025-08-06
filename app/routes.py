@@ -6,6 +6,7 @@ from .models import Aluno, Usuario
 from .forms import FormAluno
 from .auth_forms import FormLogin, FormRegistro
 from sqlalchemy import func
+from datetime import datetime  # Adicionar esta importação
 
 bp = Blueprint('main', __name__)
 
@@ -13,11 +14,6 @@ bp = Blueprint('main', __name__)
 def index():
     print("🏠 Acessando página inicial")
     return render_template('index.html')
-
-@bp.route('/health')
-def health_check():
-    print("❤️ Verificação de saúde do sistema")
-    return {'status': 'ok', 'message': 'Sistema operacional'}
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -36,7 +32,7 @@ def login():
         if usuario and usuario.check_senha(form.senha.data):
             print(f"✅ Login bem-sucedido para o usuário: {usuario.username}")
             login_user(usuario, remember=form.lembrar_me.data)
-            usuario.ultimo_login = datetime.utcnow()
+            usuario.ultimo_login = datetime.utcnow()  # Agora funciona
             db.session.commit()
             
             next_page = request.args.get('next')
@@ -55,12 +51,15 @@ def logout():
     flash('Você saiu do sistema', 'info')
     return redirect(url_for('main.login'))
 
-@bp.route('/registrar', methods=['GET', 'POST'])
-def registrar():
-    print("📝 Acessando página de registro")
+@bp.route('/registrar_usuario', methods=['GET', 'POST'])
+@login_required
+def registrar_usuario():
+    print("📝 Acessando página de registro de usuário (apenas admin)")
     
-    if current_user.is_authenticated:
-        print(f"👤 Usuário já autenticado: {current_user.username}")
+    # Verificar se o usuário atual é administrador
+    if not current_user.is_admin:
+        print("❌ Usuário não é administrador")
+        flash('Apenas administradores podem registrar novos usuários', 'danger')
         return redirect(url_for('main.listar_alunos'))
     
     form = FormRegistro()
@@ -71,7 +70,8 @@ def registrar():
         usuario = Usuario(
             username=form.username.data,
             email=form.email.data,
-            nome_completo=form.nome_completo.data
+            nome_completo=form.nome_completo.data,
+            is_admin=False  # Novos usuários não são admin por padrão
         )
         usuario.set_senha(form.senha.data)
         
@@ -79,10 +79,26 @@ def registrar():
         db.session.commit()
         
         print(f"✅ Usuário {usuario.username} registrado com sucesso")
-        flash('Conta criada com sucesso! Faça login para continuar.', 'success')
-        return redirect(url_for('main.login'))
+        flash('Usuário criado com sucesso!', 'success')
+        return redirect(url_for('main.listar_usuarios'))
     
-    return render_template('auth/registrar.html', form=form)
+    return render_template('auth/registrar_usuario.html', form=form)
+
+@bp.route('/usuarios')
+@login_required
+def listar_usuarios():
+    print("📋 Listando todos os usuários")
+    
+    # Verificar se o usuário atual é administrador
+    if not current_user.is_admin:
+        print("❌ Usuário não é administrador")
+        flash('Apenas administradores podem visualizar usuários', 'danger')
+        return redirect(url_for('main.listar_alunos'))
+    
+    usuarios = Usuario.query.all()
+    print(f"🔢 Encontrados {len(usuarios)} usuário(s) no banco de dados")
+    
+    return render_template('auth/listar_usuarios.html', usuarios=usuarios)
 
 @bp.route('/alunos')
 @login_required
