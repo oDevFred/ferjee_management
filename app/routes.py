@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template
-from .models import Aluno
 from . import db
 
 bp = Blueprint('main', __name__)
@@ -14,5 +13,6 @@ def health_check():
 
 @bp.route('/alunos')
 def listar_alunos():
+    from .models import Aluno
     alunos = Aluno.query.all()
     return render_template('alunos/listar.html', alunos=alunos)
