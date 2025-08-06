@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from . import db
 from .models import Aluno
 from .forms import FormAluno
@@ -62,3 +62,62 @@ def novo_aluno():
             print(f"⚠️ Erro no campo '{field}': {errors}")
     
     return render_template('alunos/novo.html', form=form)
+
+@bp.route('/alunos/<int:id>/editar', methods=['GET', 'POST'])
+def editar_aluno(id):
+    print(f"✏️ Acessando formulário de edição do aluno ID: {id}")
+    aluno = Aluno.query.get_or_404(id)
+    form = FormAluno(obj=aluno)
+    
+    if form.validate_on_submit():
+        print("📝 Formulário de edição validado com sucesso!")
+        print(f"👤 Atualizando dados do aluno: {form.nome.data}")
+        
+        # Atualizar dados do aluno
+        aluno.nome = form.nome.data
+        aluno.rg = form.rg.data
+        aluno.cpf = form.cpf.data
+        aluno.data_nascimento = form.data_nascimento.data
+        aluno.email = form.email.data
+        aluno.telefone = form.telefone.data
+        aluno.endereco = form.endereco.data
+        aluno.bairro = form.bairro.data
+        aluno.cidade = form.cidade.data
+        aluno.estado = form.estado.data
+        aluno.cep = form.cep.data
+        aluno.ativo = form.ativo.data
+        
+        # Salvar alterações
+        print("💾 Atualizando aluno no banco de dados...")
+        db.session.commit()
+        print("✅ Aluno atualizado com sucesso!")
+        
+        flash('Aluno atualizado com sucesso!', 'success')
+        return redirect(url_for('main.listar_alunos'))
+    
+    if request.method == 'POST':
+        print("❌ Formulário de edição com erros de validação")
+        for field, errors in form.errors.items():
+            print(f"⚠️ Erro no campo '{field}': {errors}")
+    
+    return render_template('alunos/editar.html', form=form, aluno=aluno)
+
+@bp.route('/alunos/<int:id>/excluir', methods=['POST'])
+def excluir_aluno(id):
+    print(f"🗑️ Solicitação de exclusão do aluno ID: {id}")
+    aluno = Aluno.query.get_or_404(id)
+    
+    # Excluir aluno
+    print(f"💣 Excluindo aluno: {aluno.nome} (ID: {id})")
+    db.session.delete(aluno)
+    db.session.commit()
+    print("✅ Aluno excluído com sucesso!")
+    
+    flash('Aluno excluído com sucesso!', 'success')
+    return redirect(url_for('main.listar_alunos'))
+
+@bp.route('/alunos/<int:id>/confirmar_exclusao')
+def confirmar_exclusao(id):
+    print(f"❓ Acessando página de confirmação de exclusão do aluno ID: {id}")
+    aluno = Aluno.query.get_or_404(id)
+    return render_template('alunos/confirmar_exclusao.html', aluno=aluno)

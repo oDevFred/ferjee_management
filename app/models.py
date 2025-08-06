@@ -26,3 +26,9 @@ class Aluno(db.Model, UserMixin):
     def __init__(self, **kwargs):
         print(f"🆕 Criando novo objeto aluno: {kwargs.get('nome', 'Sem nome')}")
         super().__init__(**kwargs)
+    
+    def delete(self):
+        print(f"🗑️ Excluindo aluno: {self.nome} (ID: {self.id})")
+        db.session.delete(self)
+        db.session.commit()
+        print("✅ Aluno excluído com sucesso!")

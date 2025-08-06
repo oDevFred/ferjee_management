@@ -29,6 +29,7 @@
                     <th>Email</th>
                     <th>Telefone</th>
                     <th>Status</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,6 +46,14 @@
                         {% else %}
                             <span class="badge bg-danger">Inativo</span>
                         {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.editar_aluno', id=aluno.id) }}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{{ url_for('main.confirmar_exclusao', id=aluno.id) }}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

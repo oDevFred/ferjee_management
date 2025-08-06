@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Exclusão - FERJEE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">⚠️ Confirmar Exclusão</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Tem certeza que deseja excluir o aluno abaixo?</p>
+                    
+                    <div class="alert alert-warning">
+                        <h5>{{ aluno.nome }}</h5>
+                        <p class="mb-0">
+                            <strong>CPF:</strong> {{ aluno.cpf or 'Não informado' }}<br>
+                            <strong>Email:</strong> {{ aluno.email or 'Não informado' }}
+                        </p>
+                    </div>
+                    
+                    <p class="text-danger">
+                        <strong>Atenção:</strong> Esta ação não pode ser desfeita!
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('main.excluir_aluno', id=aluno.id) }}">
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.listar_alunos') }}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmar Exclusão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
