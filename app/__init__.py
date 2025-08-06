@@ -21,6 +21,13 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     
+    # Configurar o Flask-Login
+    @login_manager.user_loader
+    def load_user(user_id):
+        # Por enquanto, vamos retornar None, pois ainda não temos um modelo de usuário completo
+        # Vamos implementar isso corretamente quando criarmos o modelo de usuário
+        return None
+    
     # Registrar blueprints
     from . import routes
     app.register_blueprint(routes.bp)
