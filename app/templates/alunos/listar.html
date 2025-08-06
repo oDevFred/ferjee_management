@@ -6,15 +6,18 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Lista de Alunos</h2>
-        <a href="{{ url_for('main.novo_aluno') }}" class="btn btn-primary">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novoAlunoModal">
             <i class="fas fa-plus"></i> Novo Aluno
-        </a>
+        </button>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
@@ -48,12 +51,12 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('main.editar_aluno', id=aluno.id) }}" class="btn btn-sm btn-warning">
+                        <button type="button" class="btn btn-sm btn-warning" onclick="abrirModalEditar({{ aluno.id }})">
                             <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{{ url_for('main.confirmar_exclusao', id=aluno.id) }}" class="btn btn-sm btn-danger">
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="abrirModalExcluir({{ aluno.id }})">
                             <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -65,4 +68,459 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Modal Novo Aluno -->
+<div class="modal fade" id="novoAlunoModal" tabindex="-1" aria-labelledby="novoAlunoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="novoAlunoModalLabel">Novo Aluno</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formNovoAluno" method="POST" action="{{ url_for('main.novo_aluno') }}">
+                    {{ form_novo.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_novo.nome.label(class="form-label") }}
+                                {{ form_novo.nome(class="form-control") }}
+                                <div class="text-danger" id="erro-nome"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.rg.label(class="form-label") }}
+                                {{ form_novo.rg(class="form-control") }}
+                                <div class="text-danger" id="erro-rg"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.cpf.label(class="form-label") }}
+                                {{ form_novo.cpf(class="form-control") }}
+                                <div class="text-danger" id="erro-cpf"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.data_nascimento.label(class="form-label") }}
+                                {{ form_novo.data_nascimento(class="form-control") }}
+                                <div class="text-danger" id="erro-data_nascimento"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_novo.email.label(class="form-label") }}
+                                {{ form_novo.email(class="form-control") }}
+                                <div class="text-danger" id="erro-email"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.telefone.label(class="form-label") }}
+                                {{ form_novo.telefone(class="form-control") }}
+                                <div class="text-danger" id="erro-telefone"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.endereco.label(class="form-label") }}
+                                {{ form_novo.endereco(class="form-control") }}
+                                <div class="text-danger" id="erro-endereco"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.bairro.label(class="form-label") }}
+                                {{ form_novo.bairro(class="form-control") }}
+                                <div class="text-danger" id="erro-bairro"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form_novo.cidade.label(class="form-label") }}
+                                {{ form_novo.cidade(class="form-control") }}
+                                <div class="text-danger" id="erro-cidade"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form_novo.estado.label(class="form-label") }}
+                                {{ form_novo.estado(class="form-control") }}
+                                <div class="text-danger" id="erro-estado"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form_novo.cep.label(class="form-label") }}
+                                {{ form_novo.cep(class="form-control") }}
+                                <div class="text-danger" id="erro-cep"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form_novo.ativo(class="form-check-input") }}
+                        {{ form_novo.ativo.label(class="form-check-label") }}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovoAluno()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Aluno -->
+<div class="modal fade" id="editarAlunoModal" tabindex="-1" aria-labelledby="editarAlunoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editarAlunoModalLabel">Editar Aluno</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarAluno" method="POST">
+                    <input type="hidden" id="editar-aluno-id" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nome Completo</label>
+                                <input type="text" class="form-control" id="editar-nome" name="nome" required>
+                                <div class="text-danger" id="editar-erro-nome"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">RG</label>
+                                <input type="text" class="form-control" id="editar-rg" name="rg">
+                                <div class="text-danger" id="editar-erro-rg"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">CPF</label>
+                                <input type="text" class="form-control" id="editar-cpf" name="cpf">
+                                <div class="text-danger" id="editar-erro-cpf"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Data de Nascimento</label>
+                                <input type="date" class="form-control" id="editar-data_nascimento" name="data_nascimento">
+                                <div class="text-danger" id="editar-erro-data_nascimento"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">E-mail</label>
+                                <input type="email" class="form-control" id="editar-email" name="email">
+                                <div class="text-danger" id="editar-erro-email"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Telefone</label>
+                                <input type="text" class="form-control" id="editar-telefone" name="telefone">
+                                <div class="text-danger" id="editar-erro-telefone"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Endereço</label>
+                                <input type="text" class="form-control" id="editar-endereco" name="endereco">
+                                <div class="text-danger" id="editar-erro-endereco"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Bairro</label>
+                                <input type="text" class="form-control" id="editar-bairro" name="bairro">
+                                <div class="text-danger" id="editar-erro-bairro"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" class="form-control" id="editar-cidade" name="cidade">
+                                <div class="text-danger" id="editar-erro-cidade"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-control" id="editar-estado" name="estado">
+                                    <option value="">Selecione...</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                                <div class="text-danger" id="editar-erro-estado"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">CEP</label>
+                                <input type="text" class="form-control" id="editar-cep" name="cep">
+                                <div class="text-danger" id="editar-erro-cep"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editar-ativo" name="ativo">
+                        <label class="form-check-label" for="editar-ativo">Ativo</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarEdicaoAluno()">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir Aluno -->
+<div class="modal fade" id="excluirAlunoModal" tabindex="-1" aria-labelledby="excluirAlunoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="excluirAlunoModalLabel">⚠️ Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir o aluno abaixo?</p>
+                
+                <div class="alert alert-warning">
+                    <h5 id="excluir-aluno-nome"></h5>
+                    <p class="mb-0">
+                        <strong>CPF:</strong> <span id="excluir-aluno-cpf"></span><br>
+                        <strong>Email:</strong> <span id="excluir-aluno-email"></span>
+                    </p>
+                </div>
+                
+                <p class="text-danger">
+                    <strong>Atenção:</strong> Esta ação não pode ser desfeita!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarExclusaoAluno()">
+                    <i class="fas fa-trash"></i> Confirmar Exclusão
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let alunoIdParaExcluir = null;
+
+function abrirModalEditar(id) {
+    console.log(`📝 Abrindo modal de edição para o aluno ID: ${id}`);
+    
+    // Buscar dados do aluno via AJAX
+    fetch(`/alunos/${id}/dados`)
+        .then(response => response.json())
+        .then(data => {
+            // Preencher o formulário com os dados do aluno
+            document.getElementById('editar-aluno-id').value = data.id;
+            document.getElementById('editar-nome').value = data.nome;
+            document.getElementById('editar-rg').value = data.rg || '';
+            document.getElementById('editar-cpf').value = data.cpf || '';
+            document.getElementById('editar-data_nascimento').value = data.data_nascimento || '';
+            document.getElementById('editar-email').value = data.email || '';
+            document.getElementById('editar-telefone').value = data.telefone || '';
+            document.getElementById('editar-endereco').value = data.endereco || '';
+            document.getElementById('editar-bairro').value = data.bairro || '';
+            document.getElementById('editar-cidade').value = data.cidade || '';
+            document.getElementById('editar-estado').value = data.estado || '';
+            document.getElementById('editar-cep').value = data.cep || '';
+            document.getElementById('editar-ativo').checked = data.ativo;
+            
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('editarAlunoModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ Erro ao buscar dados do aluno:', error);
+            alert('Erro ao carregar dados do aluno.');
+        });
+}
+
+function abrirModalExcluir(id) {
+    console.log(`🗑️ Abrindo modal de exclusão para o aluno ID: ${id}`);
+    
+    // Buscar dados do aluno via AJAX
+    fetch(`/alunos/${id}/dados`)
+        .then(response => response.json())
+        .then(data => {
+            // Preencher os dados do aluno no modal
+            document.getElementById('excluir-aluno-nome').textContent = data.nome;
+            document.getElementById('excluir-aluno-cpf').textContent = data.cpf || 'Não informado';
+            document.getElementById('excluir-aluno-email').textContent = data.email || 'Não informado';
+            
+            // Armazenar o ID do aluno para exclusão
+            alunoIdParaExcluir = id;
+            
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('excluirAlunoModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ Erro ao buscar dados do aluno:', error);
+            alert('Erro ao carregar dados do aluno.');
+        });
+}
+
+function salvarNovoAluno() {
+    console.log('💾 Salvando novo aluno...');
+    
+    const form = document.getElementById('formNovoAluno');
+    const formData = new FormData(form);
+    
+    fetch('/alunos/novo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Fechar o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('novoAlunoModal'));
+            modal.hide();
+            
+            // Recarregar a página
+            window.location.reload();
+        } else {
+            // Exibir erros de validação
+            if (data.errors) {
+                for (const [field, errors] of Object.entries(data.errors)) {
+                    const errorDiv = document.getElementById(`erro-${field}`);
+                    if (errorDiv) {
+                        errorDiv.textContent = errors.join(', ');
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erro ao salvar aluno:', error);
+        alert('Erro ao salvar aluno.');
+    });
+}
+
+function salvarEdicaoAluno() {
+    console.log('💾 Salvando edição do aluno...');
+    
+    const id = document.getElementById('editar-aluno-id').value;
+    const form = document.getElementById('formEditarAluno');
+    const formData = new FormData(form);
+    
+    fetch(`/alunos/${id}/editar`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Fechar o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editarAlunoModal'));
+            modal.hide();
+            
+            // Recarregar a página
+            window.location.reload();
+        } else {
+            // Exibir erros de validação
+            if (data.errors) {
+                for (const [field, errors] of Object.entries(data.errors)) {
+                    const errorDiv = document.getElementById(`editar-erro-${field}`);
+                    if (errorDiv) {
+                        errorDiv.textContent = errors.join(', ');
+                    }
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erro ao salvar edição:', error);
+        alert('Erro ao salvar edição.');
+    });
+}
+
+function confirmarExclusaoAluno() {
+    console.log(`🗑️ Confirmando exclusão do aluno ID: ${alunoIdParaExcluir}`);
+    
+    if (!alunoIdParaExcluir) {
+        alert('ID do aluno não encontrado.');
+        return;
+    }
+    
+    fetch(`/alunos/${alunoIdParaExcluir}/excluir`, {
+        method: 'POST'
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Fechar o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('excluirAlunoModal'));
+            modal.hide();
+            
+            // Recarregar a página
+            window.location.reload();
+        } else {
+            alert('Erro ao excluir aluno.');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Erro ao excluir aluno:', error);
+        alert('Erro ao excluir aluno.');
+    });
+}
+</script>
 {% endblock %}

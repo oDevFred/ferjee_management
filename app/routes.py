@@ -20,11 +20,36 @@ def listar_alunos():
     print("📋 Listando todos os alunos")
     alunos = Aluno.query.all()
     print(f"🔢 Encontrados {len(alunos)} aluno(s) no banco de dados")
-    return render_template('alunos/listar.html', alunos=alunos)
+    form_novo = FormAluno()
+    return render_template('alunos/listar.html', alunos=alunos, form_novo=form_novo)
+
+@bp.route('/alunos/<int:id>/dados')
+def get_aluno_dados(id):
+    print(f"📤 Buscando dados do aluno ID: {id}")
+    aluno = Aluno.query.get_or_404(id)
+    
+    # Formatar data para o formato YYYY-MM-DD
+    data_nascimento = aluno.data_nascimento.strftime('%Y-%m-%d') if aluno.data_nascimento else None
+    
+    return jsonify({
+        'id': aluno.id,
+        'nome': aluno.nome,
+        'rg': aluno.rg,
+        'cpf': aluno.cpf,
+        'data_nascimento': data_nascimento,
+        'email': aluno.email,
+        'telefone': aluno.telefone,
+        'endereco': aluno.endereco,
+        'bairro': aluno.bairro,
+        'cidade': aluno.cidade,
+        'estado': aluno.estado,
+        'cep': aluno.cep,
+        'ativo': aluno.ativo
+    })
 
 @bp.route('/alunos/novo', methods=['GET', 'POST'])
 def novo_aluno():
-    print("➕ Acessando formulário de novo aluno")
+    print("➕ Processando novo aluno")
     form = FormAluno()
     
     if form.validate_on_submit():
@@ -53,6 +78,9 @@ def novo_aluno():
         db.session.commit()
         print("✅ Aluno salvo com sucesso!")
         
+        if request.is_json:
+            return jsonify({'success': True})
+        
         flash('Aluno cadastrado com sucesso!', 'success')
         return redirect(url_for('main.listar_alunos'))
     
@@ -60,12 +88,15 @@ def novo_aluno():
         print("❌ Formulário com erros de validação")
         for field, errors in form.errors.items():
             print(f"⚠️ Erro no campo '{field}': {errors}")
+        
+        if request.is_json:
+            return jsonify({'success': False, 'errors': form.errors})
     
     return render_template('alunos/novo.html', form=form)
 
 @bp.route('/alunos/<int:id>/editar', methods=['GET', 'POST'])
 def editar_aluno(id):
-    print(f"✏️ Acessando formulário de edição do aluno ID: {id}")
+    print(f"✏️ Processando edição do aluno ID: {id}")
     aluno = Aluno.query.get_or_404(id)
     form = FormAluno(obj=aluno)
     
@@ -92,6 +123,9 @@ def editar_aluno(id):
         db.session.commit()
         print("✅ Aluno atualizado com sucesso!")
         
+        if request.is_json:
+            return jsonify({'success': True})
+        
         flash('Aluno atualizado com sucesso!', 'success')
         return redirect(url_for('main.listar_alunos'))
     
@@ -99,12 +133,15 @@ def editar_aluno(id):
         print("❌ Formulário de edição com erros de validação")
         for field, errors in form.errors.items():
             print(f"⚠️ Erro no campo '{field}': {errors}")
+        
+        if request.is_json:
+            return jsonify({'success': False, 'errors': form.errors})
     
     return render_template('alunos/editar.html', form=form, aluno=aluno)
 
 @bp.route('/alunos/<int:id>/excluir', methods=['POST'])
 def excluir_aluno(id):
-    print(f"🗑️ Solicitação de exclusão do aluno ID: {id}")
+    print(f"🗑️ Processando exclusão do aluno ID: {id}")
     aluno = Aluno.query.get_or_404(id)
     
     # Excluir aluno
@@ -113,11 +150,8 @@ def excluir_aluno(id):
     db.session.commit()
     print("✅ Aluno excluído com sucesso!")
     
+    if request.is_json:
+        return jsonify({'success': True})
+    
     flash('Aluno excluído com sucesso!', 'success')
     return redirect(url_for('main.listar_alunos'))
-
-@bp.route('/alunos/<int:id>/confirmar_exclusao')
-def confirmar_exclusao(id):
-    print(f"❓ Acessando página de confirmação de exclusão do aluno ID: {id}")
-    aluno = Aluno.query.get_or_404(id)
-    return render_template('alunos/confirmar_exclusao.html', aluno=aluno)
