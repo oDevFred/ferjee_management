@@ -4,6 +4,7 @@ from wtforms.validators import DataRequired, Email, Optional, Length, Validation
 import re
 
 class FormAluno(FlaskForm):
+    matricula = StringField('Matrícula', validators=[DataRequired(), Length(min=3, max=20)])
     nome = StringField('Nome Completo', validators=[DataRequired(), Length(min=3, max=100)])
     rg = StringField('RG', validators=[Optional(), Length(max=20)])
     cpf = StringField('CPF', validators=[Optional(), Length(min=11, max=14)])

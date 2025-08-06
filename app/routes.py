@@ -27,7 +27,7 @@ def listar_alunos():
         
         # Imprimir informações sobre cada aluno
         for aluno in alunos:
-            print(f"👤 Aluno: {aluno.nome} (ID: {aluno.id})")
+            print(f"👤 Aluno: {aluno.nome} (Matrícula: {aluno.matricula})")
         
         form_novo = FormAluno()
         print("✅ Formulário criado com sucesso")
@@ -101,6 +101,7 @@ def get_aluno_dados(id):
     
     return jsonify({
         'id': aluno.id,
+        'matricula': aluno.matricula,
         'nome': aluno.nome,
         'rg': aluno.rg,
         'cpf': aluno.cpf,
@@ -122,10 +123,11 @@ def novo_aluno():
     
     if form.validate_on_submit():
         print("📝 Formulário validado com sucesso!")
-        print(f"👤 Dados do aluno: {form.nome.data}")
+        print(f"👤 Dados do aluno: {form.nome.data} (Matrícula: {form.matricula.data})")
         
         # Criar novo aluno
         aluno = Aluno(
+            matricula=form.matricula.data,
             nome=form.nome.data,
             rg=form.rg.data,
             cpf=form.cpf.data,
@@ -170,9 +172,10 @@ def editar_aluno(id):
     
     if form.validate_on_submit():
         print("📝 Formulário de edição validado com sucesso!")
-        print(f"👤 Atualizando dados do aluno: {form.nome.data}")
+        print(f"👤 Atualizando dados do aluno: {form.nome.data} (Matrícula: {form.matricula.data})")
         
         # Atualizar dados do aluno
+        aluno.matricula = form.matricula.data
         aluno.nome = form.nome.data
         aluno.rg = form.rg.data
         aluno.cpf = form.cpf.data
@@ -213,7 +216,7 @@ def excluir_aluno(id):
     aluno = Aluno.query.get_or_404(id)
     
     # Excluir aluno
-    print(f"💣 Excluindo aluno: {aluno.nome} (ID: {id})")
+    print(f"💣 Excluindo aluno: {aluno.nome} (Matrícula: {aluno.matricula})")
     db.session.delete(aluno)
     db.session.commit()
     print("✅ Aluno excluído com sucesso!")

@@ -4,6 +4,7 @@ from datetime import datetime
 
 class Aluno(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    matricula = db.Column(db.String(20), unique=True, nullable=False)
     nome = db.Column(db.String(100), nullable=False)
     rg = db.Column(db.String(20), unique=True, nullable=True)
     cpf = db.Column(db.String(14), unique=True, nullable=True)
@@ -20,15 +21,9 @@ class Aluno(db.Model, UserMixin):
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        print(f"👤 Representando aluno: {self.nome} (ID: {self.id})")
+        print(f"👤 Representando aluno: {self.nome} (Matrícula: {self.matricula})")
         return f'<Aluno {self.nome}>'
     
     def __init__(self, **kwargs):
         print(f"🆕 Criando novo objeto aluno: {kwargs.get('nome', 'Sem nome')}")
         super().__init__(**kwargs)
-    
-    def delete(self):
-        print(f"🗑️ Excluindo aluno: {self.nome} (ID: {self.id})")
-        db.session.delete(self)
-        db.session.commit()
-        print("✅ Aluno excluído com sucesso!")

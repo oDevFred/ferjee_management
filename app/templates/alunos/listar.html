@@ -4,9 +4,6 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Lista de Alunos</h2>
-    <p>Debug: Template carregado com sucesso!</p>
-    
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Lista de Alunos</h2>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novoAlunoModal">
@@ -25,51 +22,53 @@
         {% endif %}
     {% endwith %}
     
-    <p>Debug: Quantidade de alunos: {{ alunos|length }}</p>
-    
     {% if alunos %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>CPF</th>
-                    <th>Email</th>
-                    <th>Telefone</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for aluno in alunos %}
-                <tr>
-                    <td>{{ aluno.id }}</td>
-                    <td>{{ aluno.nome }}</td>
-                    <td>{{ aluno.cpf }}</td>
-                    <td>{{ aluno.email }}</td>
-                    <td>{{ aluno.telefone }}</td>
-                    <td>
-                        {% if aluno.ativo %}
-                            <span class="badge bg-success">Ativo</span>
-                        {% else %}
-                            <span class="badge bg-danger">Inativo</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-warning" onclick="abrirModalEditar({{ aluno.id }})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="abrirModalExcluir({{ aluno.id }})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Matrícula</th>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Cidade/UF</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aluno in alunos %}
+                    <tr>
+                        <td><strong>{{ aluno.matricula }}</strong></td>
+                        <td>{{ aluno.nome }}</td>
+                        <td>{{ aluno.cpf }}</td>
+                        <td>{{ aluno.email }}</td>
+                        <td>{{ aluno.telefone }}</td>
+                        <td>{{ aluno.cidade }}/{{ aluno.estado }}</td>
+                        <td>
+                            {% if aluno.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="abrirModalEditar({{ aluno.id }})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="abrirModalExcluir({{ aluno.id }})" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
-        <div class="alert alert-info">
-            Nenhum aluno cadastrado no sistema.
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> Nenhum aluno cadastrado no sistema.
         </div>
     {% endif %}
 </div>
@@ -79,40 +78,114 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="novoAlunoModalLabel">Novo Aluno</h5>
+                <h5 class="modal-title" id="novoAlunoModalLabel">
+                    <i class="fas fa-user-plus"></i> Novo Aluno
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="formNovoAluno" method="POST" action="{{ url_for('main.novo_aluno') }}">
                     {{ form_novo.hidden_tag() }}
                     
-                    <div class="mb-3">
-                        {{ form_novo.nome.label(class="form-label") }}
-                        {{ form_novo.nome(class="form-control") }}
-                        <div class="text-danger" id="erro-nome"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_novo.matricula.label(class="form-label") }}
+                                {{ form_novo.matricula(class="form-control") }}
+                                <div class="text-danger" id="erro-matricula"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.nome.label(class="form-label") }}
+                                {{ form_novo.nome(class="form-control") }}
+                                <div class="text-danger" id="erro-nome"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.rg.label(class="form-label") }}
+                                {{ form_novo.rg(class="form-control") }}
+                                <div class="text-danger" id="erro-rg"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.cpf.label(class="form-label") }}
+                                {{ form_novo.cpf(class="form-control") }}
+                                <div class="text-danger" id="erro-cpf"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.data_nascimento.label(class="form-label") }}
+                                {{ form_novo.data_nascimento(class="form-control") }}
+                                <div class="text-danger" id="erro-data_nascimento"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_novo.email.label(class="form-label") }}
+                                {{ form_novo.email(class="form-control") }}
+                                <div class="text-danger" id="erro-email"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.telefone.label(class="form-label") }}
+                                {{ form_novo.telefone(class="form-control") }}
+                                <div class="text-danger" id="erro-telefone"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.endereco.label(class="form-label") }}
+                                {{ form_novo.endereco(class="form-control") }}
+                                <div class="text-danger" id="erro-endereco"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.bairro.label(class="form-label") }}
+                                {{ form_novo.bairro(class="form-control") }}
+                                <div class="text-danger" id="erro-bairro"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form_novo.cep.label(class="form-label") }}
+                                {{ form_novo.cep(class="form-control") }}
+                                <div class="text-danger" id="erro-cep"></div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form_novo.cpf.label(class="form-label") }}
-                        {{ form_novo.cpf(class="form-control") }}
-                        <div class="text-danger" id="erro-cpf"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form_novo.email.label(class="form-label") }}
-                        {{ form_novo.email(class="form-control") }}
-                        <div class="text-danger" id="erro-email"></div>
-                    </div>
-                    
-                    <div class="mb-3 form-check">
-                        {{ form_novo.ativo(class="form-check-input") }}
-                        {{ form_novo.ativo.label(class="form-check-label") }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form_novo.cidade.label(class="form-label") }}
+                                {{ form_novo.cidade(class="form-control") }}
+                                <div class="text-danger" id="erro-cidade"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {{ form_novo.estado.label(class="form-label") }}
+                                {{ form_novo.estado(class="form-control") }}
+                                <div class="text-danger" id="erro-estado"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="mb-3 form-check mt-4">
+                                {{ form_novo.ativo(class="form-check-input") }}
+                                {{ form_novo.ativo.label(class="form-check-label") }}
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarNovoAluno()">Salvar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="salvarNovoAluno()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
             </div>
         </div>
     </div>
@@ -123,7 +196,9 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editarAlunoModalLabel">Editar Aluno</h5>
+                <h5 class="modal-title" id="editarAlunoModalLabel">
+                    <i class="fas fa-user-edit"></i> Editar Aluno
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -131,33 +206,134 @@
                     <input type="hidden" id="editar-aluno-id" name="id">
                     <input type="hidden" name="csrf_token" value="{{ form_novo.csrf_token._value() }}">
                     
-                    <div class="mb-3">
-                        <label class="form-label">Nome Completo</label>
-                        <input type="text" class="form-control" id="editar-nome" name="nome" required>
-                        <div class="text-danger" id="editar-erro-nome"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Matrícula</label>
+                                <input type="text" class="form-control" id="editar-matricula" name="matricula" required>
+                                <div class="text-danger" id="editar-erro-matricula"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Nome Completo</label>
+                                <input type="text" class="form-control" id="editar-nome" name="nome" required>
+                                <div class="text-danger" id="editar-erro-nome"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">RG</label>
+                                <input type="text" class="form-control" id="editar-rg" name="rg">
+                                <div class="text-danger" id="editar-erro-rg"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">CPF</label>
+                                <input type="text" class="form-control" id="editar-cpf" name="cpf">
+                                <div class="text-danger" id="editar-erro-cpf"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Data de Nascimento</label>
+                                <input type="date" class="form-control" id="editar-data_nascimento" name="data_nascimento">
+                                <div class="text-danger" id="editar-erro-data_nascimento"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">E-mail</label>
+                                <input type="email" class="form-control" id="editar-email" name="email">
+                                <div class="text-danger" id="editar-erro-email"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Telefone</label>
+                                <input type="text" class="form-control" id="editar-telefone" name="telefone">
+                                <div class="text-danger" id="editar-erro-telefone"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Endereço</label>
+                                <input type="text" class="form-control" id="editar-endereco" name="endereco">
+                                <div class="text-danger" id="editar-erro-endereco"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Bairro</label>
+                                <input type="text" class="form-control" id="editar-bairro" name="bairro">
+                                <div class="text-danger" id="editar-erro-bairro"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">CEP</label>
+                                <input type="text" class="form-control" id="editar-cep" name="cep">
+                                <div class="text-danger" id="editar-erro-cep"></div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label">CPF</label>
-                        <input type="text" class="form-control" id="editar-cpf" name="cpf">
-                        <div class="text-danger" id="editar-erro-cpf"></div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">E-mail</label>
-                        <input type="email" class="form-control" id="editar-email" name="email">
-                        <div class="text-danger" id="editar-erro-email"></div>
-                    </div>
-                    
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="editar-ativo" name="ativo">
-                        <label class="form-check-label" for="editar-ativo">Ativo</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" class="form-control" id="editar-cidade" name="cidade">
+                                <div class="text-danger" id="editar-erro-cidade"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-control" id="editar-estado" name="estado">
+                                    <option value="">Selecione...</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                                <div class="text-danger" id="editar-erro-estado"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="mb-3 form-check mt-4">
+                                <input type="checkbox" class="form-check-input" id="editar-ativo" name="ativo">
+                                <label class="form-check-label" for="editar-ativo">Ativo</label>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="salvarEdicaoAluno()">Salvar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="salvarEdicaoAluno()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
             </div>
         </div>
     </div>
@@ -168,7 +344,9 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="excluirAlunoModalLabel">⚠️ Confirmar Exclusão</h5>
+                <h5 class="modal-title" id="excluirAlunoModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Exclusão
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -177,6 +355,7 @@
                 <div class="alert alert-warning">
                     <h5 id="excluir-aluno-nome"></h5>
                     <p class="mb-0">
+                        <strong>Matrícula:</strong> <span id="excluir-aluno-matricula"></span><br>
                         <strong>CPF:</strong> <span id="excluir-aluno-cpf"></span><br>
                         <strong>Email:</strong> <span id="excluir-aluno-email"></span>
                     </p>
@@ -187,7 +366,9 @@
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
                 <button type="button" class="btn btn-danger" onclick="confirmarExclusaoAluno()">
                     <i class="fas fa-trash"></i> Confirmar Exclusão
                 </button>
@@ -208,9 +389,18 @@ function abrirModalEditar(id) {
         .then(data => {
             // Preencher o formulário com os dados do aluno
             document.getElementById('editar-aluno-id').value = data.id;
+            document.getElementById('editar-matricula').value = data.matricula;
             document.getElementById('editar-nome').value = data.nome;
+            document.getElementById('editar-rg').value = data.rg || '';
             document.getElementById('editar-cpf').value = data.cpf || '';
+            document.getElementById('editar-data_nascimento').value = data.data_nascimento || '';
             document.getElementById('editar-email').value = data.email || '';
+            document.getElementById('editar-telefone').value = data.telefone || '';
+            document.getElementById('editar-endereco').value = data.endereco || '';
+            document.getElementById('editar-bairro').value = data.bairro || '';
+            document.getElementById('editar-cidade').value = data.cidade || '';
+            document.getElementById('editar-estado').value = data.estado || '';
+            document.getElementById('editar-cep').value = data.cep || '';
             document.getElementById('editar-ativo').checked = data.ativo;
             
             // Abrir o modal
@@ -232,6 +422,7 @@ function abrirModalExcluir(id) {
         .then(data => {
             // Preencher os dados do aluno no modal
             document.getElementById('excluir-aluno-nome').textContent = data.nome;
+            document.getElementById('excluir-aluno-matricula').textContent = data.matricula;
             document.getElementById('excluir-aluno-cpf').textContent = data.cpf || 'Não informado';
             document.getElementById('excluir-aluno-email').textContent = data.email || 'Não informado';
             
