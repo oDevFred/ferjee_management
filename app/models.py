@@ -19,8 +19,10 @@ class Aluno(db.Model, UserMixin):
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relacionamentos (serão implementados posteriormente)
-    # matriculas = db.relationship('Matricula', backref='aluno', lazy=True)
-
     def __repr__(self):
+        print(f"👤 Representando aluno: {self.nome} (ID: {self.id})")
         return f'<Aluno {self.nome}>'
+    
+    def __init__(self, **kwargs):
+        print(f"🆕 Criando novo objeto aluno: {kwargs.get('nome', 'Sem nome')}")
+        super().__init__(**kwargs)
