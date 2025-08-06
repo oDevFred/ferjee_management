@@ -13,7 +13,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configurações
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave-secreta-padrao')
     
     # Configuração do banco de dados com caminho absoluto
     basedir = os.path.abspath(os.path.dirname(__file__))

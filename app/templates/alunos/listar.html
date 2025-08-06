@@ -4,7 +4,20 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Lista de Alunos</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Lista de Alunos</h2>
+        <a href="{{ url_for('main.novo_aluno') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Aluno
+        </a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     
     {% if alunos %}
         <table class="table table-striped">
