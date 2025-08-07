@@ -2,11 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_wtf.csrf import generate_csrf
 from flask_login import login_user, logout_user, login_required, current_user
 from . import db
-from .models import Aluno, Usuario
+from .models import Aluno, Usuario, Curso, Matricula
 from .forms import FormAluno
 from .auth_forms import FormLogin, FormRegistro
+from .curso_forms import FormCurso, FormMatricula
 from sqlalchemy import func
-from datetime import datetime  # Adicionar esta importação
+from datetime import datetime
 
 bp = Blueprint('main', __name__)
 
@@ -14,6 +15,11 @@ bp = Blueprint('main', __name__)
 def index():
     print("🏠 Acessando página inicial")
     return render_template('index.html')
+
+@bp.route('/health')
+def health_check():
+    print("❤️ Verificação de saúde do sistema")
+    return {'status': 'ok', 'message': 'Sistema operacional'}
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -32,7 +38,7 @@ def login():
         if usuario and usuario.check_senha(form.senha.data):
             print(f"✅ Login bem-sucedido para o usuário: {usuario.username}")
             login_user(usuario, remember=form.lembrar_me.data)
-            usuario.ultimo_login = datetime.utcnow()  # Agora funciona
+            usuario.ultimo_login = datetime.utcnow()
             db.session.commit()
             
             next_page = request.args.get('next')
@@ -54,13 +60,11 @@ def logout():
 @bp.route('/registrar_usuario', methods=['GET', 'POST'])
 @login_required
 def registrar_usuario():
-    print("📝 Acessando página de registro de usuário (apenas admin)")
+    print("📝 Acessando página de registro de usuário")
     
-    # Verificar se o usuário atual é administrador
     if not current_user.is_admin:
-        print("❌ Usuário não é administrador")
         flash('Apenas administradores podem registrar novos usuários', 'danger')
-        return redirect(url_for('main.listar_alunos'))
+        return redirect(url_for('main.index'))
     
     form = FormRegistro()
     
@@ -70,8 +74,7 @@ def registrar_usuario():
         usuario = Usuario(
             username=form.username.data,
             email=form.email.data,
-            nome_completo=form.nome_completo.data,
-            is_admin=False  # Novos usuários não são admin por padrão
+            nome_completo=form.nome_completo.data
         )
         usuario.set_senha(form.senha.data)
         
@@ -89,16 +92,21 @@ def registrar_usuario():
 def listar_usuarios():
     print("📋 Listando todos os usuários")
     
-    # Verificar se o usuário atual é administrador
     if not current_user.is_admin:
-        print("❌ Usuário não é administrador")
-        flash('Apenas administradores podem visualizar usuários', 'danger')
-        return redirect(url_for('main.listar_alunos'))
+        flash('Apenas administradores podem acessar esta página', 'danger')
+        return redirect(url_for('main.index'))
     
-    usuarios = Usuario.query.all()
-    print(f"🔢 Encontrados {len(usuarios)} usuário(s) no banco de dados")
-    
-    return render_template('auth/listar_usuarios.html', usuarios=usuarios)
+    try:
+        usuarios = Usuario.query.all()
+        print(f"🔢 Encontrados {len(usuarios)} usuário(s) no banco de dados")
+        
+        return render_template('auth/listar_usuarios.html', usuarios=usuarios)
+        
+    except Exception as e:
+        print(f"❌ Erro ao listar usuários: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Erro ao carregar página: {str(e)}", 500
 
 @bp.route('/alunos')
 @login_required
@@ -125,6 +133,133 @@ def listar_alunos():
         traceback.print_exc()
         return f"Erro ao carregar página: {str(e)}", 500
 
+@bp.route('/cursos')
+@login_required
+def listar_cursos():
+    print("📚 Listando todos os cursos")
+    
+    try:
+        cursos = Curso.query.all()
+        print(f"🔢 Encontrados {len(cursos)} curso(s) no banco de dados")
+        
+        # Imprimir informações sobre cada curso
+        for curso in cursos:
+            print(f"📚 Curso: {curso.nome} (Duração: {curso.duracao_meses} meses)")
+        
+        return render_template('cursos/listar.html', cursos=cursos)
+        
+    except Exception as e:
+        print(f"❌ Erro ao listar cursos: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Erro ao carregar página: {str(e)}", 500
+
+@bp.route('/cursos/novo', methods=['GET', 'POST'])
+@login_required
+def novo_curso():
+    print("📚 Acessando formulário de novo curso")
+    
+    if not current_user.is_admin:
+        flash('Apenas administradores podem criar novos cursos', 'danger')
+        return redirect(url_for('main.listar_cursos'))
+    
+    form = FormCurso()
+    
+    if form.validate_on_submit():
+        print("📝 Formulário de curso validado com sucesso!")
+        print(f"📚 Dados do curso: {form.nome.data}")
+        
+        # Criar novo curso
+        curso = Curso(
+            nome=form.nome.data,
+            descricao=form.descricao.data,
+            duracao_meses=form.duracao_meses.data,
+            valor_mensalidade=form.valor_mensalidade.data,
+            ativo=form.ativo.data
+        )
+        
+        # Adicionar ao banco de dados
+        print("💾 Salvando curso no banco de dados...")
+        db.session.add(curso)
+        db.session.commit()
+        print("✅ Curso salvo com sucesso!")
+        
+        flash('Curso criado com sucesso!', 'success')
+        return redirect(url_for('main.listar_cursos'))
+    
+    if request.method == 'POST':
+        print("❌ Formulário com erros de validação")
+        for field, errors in form.errors.items():
+            print(f"⚠️ Erro no campo '{field}': {errors}")
+    
+    return render_template('cursos/novo.html', form=form)
+
+@bp.route('/matriculas')
+@login_required
+def listar_matriculas():
+    print("📝 Listando todas as matrículas")
+    
+    try:
+        matriculas = Matricula.query.all()
+        print(f"🔢 Encontradas {len(matriculas)} matrícula(s) no banco de dados")
+        
+        return render_template('matriculas/listar.html', matriculas=matriculas)
+        
+    except Exception as e:
+        print(f"❌ Erro ao listar matrículas: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Erro ao carregar página: {str(e)}", 500
+
+@bp.route('/matriculas/nova', methods=['GET', 'POST'])
+@login_required
+def nova_matricula():
+    print("📝 Acessando formulário de nova matrícula")
+    
+    form = FormMatricula()
+    
+    # Preencher as opções do select
+    form.aluno_id.choices = [(a.id, f"{a.nome} ({a.matricula})") for a in Aluno.query.filter_by(ativo=True).all()]
+    form.curso_id.choices = [(c.id, c.nome) for c in Curso.query.filter_by(ativo=True).all()]
+    
+    if form.validate_on_submit():
+        print("📝 Formulário de matrícula validado com sucesso!")
+        
+        # Verificar se o aluno já está matriculado neste curso
+        matricula_existente = Matricula.query.filter_by(
+            aluno_id=form.aluno_id.data,
+            curso_id=form.curso_id.data,
+            status='ativo'
+        ).first()
+        
+        if matricula_existente:
+            flash('Este aluno já está matriculado neste curso!', 'danger')
+            return render_template('matriculas/nova.html', form=form)
+        
+        # Criar nova matrícula
+        matricula = Matricula(
+            aluno_id=form.aluno_id.data,
+            curso_id=form.curso_id.data,
+            status=form.status.data,
+            observacoes=form.observacoes.data
+        )
+        
+        # Adicionar ao banco de dados
+        print("💾 Salvando matrícula no banco de dados...")
+        db.session.add(matricula)
+        db.session.commit()
+        print("✅ Matrícula salva com sucesso!")
+        
+        flash('Matrícula realizada com sucesso!', 'success')
+        return redirect(url_for('main.listar_matriculas'))
+    
+    if request.method == 'POST':
+        print("❌ Formulário com erros de validação")
+        for field, errors in form.errors.items():
+            print(f"⚠️ Erro no campo '{field}': {errors}")
+    
+    return render_template('matriculas/nova.html', form=form)
+
 @bp.route('/relatorios')
 @login_required
 def relatorios():
@@ -142,6 +277,14 @@ def relatorios():
         # Total de alunos inativos
         alunos_inativos = Aluno.query.filter_by(ativo=False).count()
         print(f"❌ Alunos inativos: {alunos_inativos}")
+        
+        # Total de cursos
+        total_cursos = Curso.query.count()
+        print(f"📚 Total de cursos: {total_cursos}")
+        
+        # Total de matrículas
+        total_matriculas = Matricula.query.count()
+        print(f"📝 Total de matrículas: {total_matriculas}")
         
         # Alunos por estado
         alunos_por_estado = db.session.query(
@@ -166,6 +309,8 @@ def relatorios():
             total_alunos=total_alunos,
             alunos_ativos=alunos_ativos,
             alunos_inativos=alunos_inativos,
+            total_cursos=total_cursos,
+            total_matriculas=total_matriculas,
             alunos_por_estado=alunos_por_estado,
             alunos_por_mes=alunos_por_mes
         )
@@ -176,140 +321,4 @@ def relatorios():
         traceback.print_exc()
         return f"Erro ao gerar relatórios: {str(e)}", 500
 
-@bp.route('/alunos/<int:id>/dados')
-@login_required
-def get_aluno_dados(id):
-    print(f"📤 Buscando dados do aluno ID: {id}")
-    aluno = Aluno.query.get_or_404(id)
-    
-    # Formatar data para o formato YYYY-MM-DD
-    data_nascimento = aluno.data_nascimento.strftime('%Y-%m-%d') if aluno.data_nascimento else None
-    
-    return jsonify({
-        'id': aluno.id,
-        'matricula': aluno.matricula,
-        'nome': aluno.nome,
-        'rg': aluno.rg,
-        'cpf': aluno.cpf,
-        'data_nascimento': data_nascimento,
-        'email': aluno.email,
-        'telefone': aluno.telefone,
-        'endereco': aluno.endereco,
-        'bairro': aluno.bairro,
-        'cidade': aluno.cidade,
-        'estado': aluno.estado,
-        'cep': aluno.cep,
-        'ativo': aluno.ativo
-    })
-
-@bp.route('/alunos/novo', methods=['GET', 'POST'])
-@login_required
-def novo_aluno():
-    print("➕ Processando novo aluno")
-    form = FormAluno()
-    
-    if form.validate_on_submit():
-        print("📝 Formulário validado com sucesso!")
-        print(f"👤 Dados do aluno: {form.nome.data}")
-        
-        # Criar novo aluno (matrícula será gerada automaticamente)
-        aluno = Aluno(
-            nome=form.nome.data,
-            rg=form.rg.data,
-            cpf=form.cpf.data,
-            data_nascimento=form.data_nascimento.data,
-            email=form.email.data,
-            telefone=form.telefone.data,
-            endereco=form.endereco.data,
-            bairro=form.bairro.data,
-            cidade=form.cidade.data,
-            estado=form.estado.data,
-            cep=form.cep.data,
-            ativo=form.ativo.data
-        )
-        
-        # Adicionar ao banco de dados
-        print("💾 Salvando aluno no banco de dados...")
-        db.session.add(aluno)
-        db.session.commit()
-        print(f"✅ Aluno salvo com sucesso! Matrícula gerada: {aluno.matricula}")
-        
-        if request.is_json:
-            return jsonify({'success': True, 'matricula': aluno.matricula})
-        
-        flash(f'Aluno cadastrado com sucesso! Matrícula: {aluno.matricula}', 'success')
-        return redirect(url_for('main.listar_alunos'))
-    
-    if request.method == 'POST':
-        print("❌ Formulário com erros de validação")
-        for field, errors in form.errors.items():
-            print(f"⚠️ Erro no campo '{field}': {errors}")
-        
-        if request.is_json:
-            return jsonify({'success': False, 'errors': form.errors})
-    
-    return render_template('alunos/novo.html', form=form)
-
-@bp.route('/alunos/<int:id>/editar', methods=['GET', 'POST'])
-@login_required
-def editar_aluno(id):
-    print(f"✏️ Processando edição do aluno ID: {id}")
-    aluno = Aluno.query.get_or_404(id)
-    form = FormAluno(obj=aluno)
-    
-    if form.validate_on_submit():
-        print("📝 Formulário de edição validado com sucesso!")
-        print(f"👤 Atualizando dados do aluno: {form.nome.data} (Matrícula: {aluno.matricula})")
-        
-        # Atualizar dados do aluno (matrícula não pode ser alterada)
-        aluno.nome = form.nome.data
-        aluno.rg = form.rg.data
-        aluno.cpf = form.cpf.data
-        aluno.data_nascimento = form.data_nascimento.data
-        aluno.email = form.email.data
-        aluno.telefone = form.telefone.data
-        aluno.endereco = form.endereco.data
-        aluno.bairro = form.bairro.data
-        aluno.cidade = form.cidade.data
-        aluno.estado = form.estado.data
-        aluno.cep = form.cep.data
-        aluno.ativo = form.ativo.data
-        
-        # Salvar alterações
-        print("💾 Atualizando aluno no banco de dados...")
-        db.session.commit()
-        print("✅ Aluno atualizado com sucesso!")
-        
-        if request.is_json:
-            return jsonify({'success': True})
-        
-        flash('Aluno atualizado com sucesso!', 'success')
-        return redirect(url_for('main.listar_alunos'))
-    
-    if request.method == 'POST':
-        print("❌ Formulário de edição com erros de validação")
-        for field, errors in form.errors.items():
-            print(f"⚠️ Erro no campo '{field}': {errors}")
-        
-        if request.is_json:
-            return jsonify({'success': False, 'errors': form.errors})
-    
-    return render_template('alunos/editar.html', form=form, aluno=aluno)
-
-@bp.route('/alunos/<int:id>/excluir', methods=['POST'])
-@login_required
-def excluir_aluno(id):
-    print(f"🗑️ Processando exclusão do aluno ID: {id}")
-    aluno = Aluno.query.get_or_404(id)
-    
-    # Excluir aluno
-    print(f"💣 Excluindo aluno: {aluno.nome} (Matrícula: {aluno.matricula})")
-    db.session.delete(aluno)
-    db.session.commit()
-    print("✅ Aluno excluído com sucesso!")
-    
-    if request.is_json:
-        return jsonify({'success': True})
-    
-    flash('Aluno excluído com sucesso!', 'success')
-    return redirect(url_for('main.listar_alunos'))
+# ... (manter as outras rotas existentes)

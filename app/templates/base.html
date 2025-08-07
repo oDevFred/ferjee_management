@@ -25,6 +25,28 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.relatorios') }}">Relatórios</a>
                     </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-graduation-cap"></i> Cursos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('main.listar_cursos') }}">
+                                <i class="fas fa-list"></i> Listar Cursos
+                            </a></li>
+                            {% if current_user.is_admin %}
+                            <li><a class="dropdown-item" href="{{ url_for('main.novo_curso') }}">
+                                <i class="fas fa-plus"></i> Novo Curso
+                            </a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.listar_matriculas') }}">
+                            <i class="fas fa-clipboard-list"></i> Matrículas
+                        </a>
+                    </li>
+                    {% endif %}
                     {% if current_user.is_admin %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">

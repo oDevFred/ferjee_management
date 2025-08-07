@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Matrículas - FERJEE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-clipboard-list"></i> Matrículas</h2>
+        <a href="{{ url_for('main.nova_matricula') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Matrícula
+        </a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    {% if matriculas %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Curso</th>
+                        <th>Data da Matrícula</th>
+                        <th>Status</th>
+                        <th>Observações</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for matricula in matriculas %}
+                    <tr>
+                        <td>{{ matricula.aluno.nome }} ({{ matricula.aluno.matricula }})</td>
+                        <td>{{ matricula.curso.nome }}</td>
+                        <td>{{ matricula.data_matricula.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if matricula.status == 'ativo' %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% elif matricula.status == 'concluido' %}
+                                <span class="badge bg-primary">Concluído</span>
+                            {% elif matricula.status == 'cancelado' %}
+                                <span class="badge bg-danger">Cancelado</span>
+                            {% elif matricula.status == 'trancado' %}
+                                <span class="badge bg-warning">Trancado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ matricula.observacoes or '-' }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> Nenhuma matrícula encontrada no sistema.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

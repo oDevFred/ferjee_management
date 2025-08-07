@@ -66,3 +66,36 @@ class Usuario(db.Model, UserMixin):
     def __repr__(self):
         print(f"👤 Representando usuário: {self.username} ({self.nome_completo})")
         return f'<Usuario {self.username}>'
+
+class Curso(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    duracao_meses = db.Column(db.Integer, nullable=False)
+    valor_mensalidade = db.Column(db.Float, nullable=False)
+    ativo = db.Column(db.Boolean, default=True)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    matriculas = db.relationship('Matricula', backref='curso', lazy=True)
+    
+    def __repr__(self):
+        print(f"📚 Representando curso: {self.nome}")
+        return f'<Curso {self.nome}>'
+
+class Matricula(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    aluno_id = db.Column(db.Integer, db.ForeignKey('aluno.id'), nullable=False)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.id'), nullable=False)
+    data_matricula = db.Column(db.DateTime, default=datetime.utcnow)
+    data_conclusao = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(20), default='ativo')  # ativo, concluido, cancelado, trancado
+    observacoes = db.Column(db.Text, nullable=True)
+    
+    # Relacionamentos
+    aluno = db.relationship('Aluno', backref='matriculas')
+    
+    def __repr__(self):
+        print(f"📝 Representando matrícula: Aluno {self.aluno_id} no Curso {self.curso_id}")
+        return f'<Matricula {self.id}>'
