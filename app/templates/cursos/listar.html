@@ -53,12 +53,19 @@
                         <td>{{ curso.matriculas|length }}</td>
                         <td>
                             <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-warning" title="Editar">
+                                <a href="{{ url_for('main.editar_curso', id=curso.id) }}" class="btn btn-sm btn-warning" title="Editar">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-info" title="Ver Matrículas">
+                                </a>
+                                <button type="button" class="btn btn-sm btn-info" title="Ver Matrículas" onclick="verMatriculasCurso({{ curso.id }})">
                                     <i class="fas fa-users"></i>
                                 </button>
+                                {% if current_user.is_admin %}
+                                <form method="POST" action="{{ url_for('main.excluir_curso', id=curso.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir este curso?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -72,4 +79,92 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Modal Matrículas do Curso -->
+<div class="modal fade" id="matriculasCursoModal" tabindex="-1" aria-labelledby="matriculasCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="matriculasCursoModalLabel">
+                    <i class="fas fa-clipboard-list"></i> Matrículas do Curso
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="matriculas-curso-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function verMatriculasCurso(id) {
+    console.log(`📝 Visualizando matrículas do curso ID: ${id}`);
+    
+    // Buscar matrículas do curso via AJAX
+    fetch(`/cursos/${id}/matriculas`)
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            
+            if (data.matriculas.length > 0) {
+                html = `
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Aluno</th>
+                                <th>Data da Matrícula</th>
+                                <th>Status</th>
+                                <th>Observações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.matriculas.forEach(matricula => {
+                    html += `
+                        <tr>
+                            <td>${matricula.aluno_nome} (${matricula.aluno_matricula})</td>
+                            <td>${new Date(matricula.data_matricula).toLocaleDateString('pt-BR')}</td>
+                            <td>
+                                <span class="badge bg-${getStatusColor(matricula.status)}">${matricula.status}</span>
+                            </td>
+                            <td>${matricula.observacoes || '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                html = '<p class="text-muted">Este curso não possui matrículas.</p>';
+            }
+            
+            document.getElementById('matriculas-curso-list').innerHTML = html;
+            
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('matriculasCursoModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ Erro ao buscar matrículas do curso:', error);
+            alert('Erro ao carregar matrículas do curso.');
+        });
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'ativo': 'success',
+        'concluido': 'primary',
+        'cancelado': 'danger',
+        'trancado': 'warning'
+    };
+    return colors[status] || 'secondary';
+}
+</script>
 {% endblock %}

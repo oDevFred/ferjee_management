@@ -60,6 +60,9 @@
                             <button type="button" class="btn btn-sm btn-danger" onclick="abrirModalExcluir({{ aluno.id }})" title="Excluir">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            <button type="button" class="btn btn-sm btn-info" onclick="verMatriculas({{ aluno.id }})" title="Ver Matrículas">
+                                <i class="fas fa-clipboard-list"></i>
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -84,7 +87,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="formNovoAluno" method="POST" action="{{ url_for('main.novo_aluno') }}">
+                <form id="formNovoAluno" method="POST">
                     {{ form_novo.hidden_tag() }}
                     
                     <div class="row">
@@ -138,12 +141,6 @@
                                 {{ form_novo.bairro.label(class="form-label") }}
                                 {{ form_novo.bairro(class="form-control") }}
                                 <div class="text-danger" id="erro-bairro"></div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                {{ form_novo.cep.label(class="form-label") }}
-                                {{ form_novo.cep(class="form-control") }}
-                                <div class="text-danger" id="erro-cep"></div>
                             </div>
                         </div>
                     </div>
@@ -204,12 +201,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Matrícula</label>
-                                <input type="text" class="form-control" id="editar-matricula" name="matricula" required>
-                                <div class="text-danger" id="editar-erro-matricula"></div>
-                            </div>
-                            
-                            <div class="mb-3">
                                 <label class="form-label">Nome Completo</label>
                                 <input type="text" class="form-control" id="editar-nome" name="nome" required>
                                 <div class="text-danger" id="editar-erro-nome"></div>
@@ -257,12 +248,6 @@
                                 <label class="form-label">Bairro</label>
                                 <input type="text" class="form-control" id="editar-bairro" name="bairro">
                                 <div class="text-danger" id="editar-erro-bairro"></div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">CEP</label>
-                                <input type="text" class="form-control" id="editar-cep" name="cep">
-                                <div class="text-danger" id="editar-erro-cep"></div>
                             </div>
                         </div>
                     </div>
@@ -367,6 +352,26 @@
                 <button type="button" class="btn btn-danger" onclick="confirmarExclusaoAluno()">
                     <i class="fas fa-trash"></i> Confirmar Exclusão
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Matrículas do Aluno -->
+<div class="modal fade" id="matriculasAlunoModal" tabindex="-1" aria-labelledby="matriculasAlunoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="matriculasAlunoModalLabel">
+                    <i class="fas fa-clipboard-list"></i> Matrículas do Aluno
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="matriculas-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
             </div>
         </div>
     </div>
@@ -502,6 +507,72 @@ function abrirModalExcluir(id) {
             console.error('❌ Erro ao buscar dados do aluno:', error);
             alert('Erro ao carregar dados do aluno.');
         });
+}
+
+function verMatriculas(id) {
+    console.log(`📝 Visualizando matrículas do aluno ID: ${id}`);
+    
+    // Buscar matrículas do aluno via AJAX
+    fetch(`/alunos/${id}/matriculas`)
+        .then(response => response.json())
+        .then(data => {
+            let html = '';
+            
+            if (data.matriculas.length > 0) {
+                html = `
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th>Data da Matrícula</th>
+                                <th>Status</th>
+                                <th>Observações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.matriculas.forEach(matricula => {
+                    html += `
+                        <tr>
+                            <td>${matricula.curso_nome}</td>
+                            <td>${new Date(matricula.data_matricula).toLocaleDateString('pt-BR')}</td>
+                            <td>
+                                <span class="badge bg-${getStatusColor(matricula.status)}">${matricula.status}</span>
+                            </td>
+                            <td>${matricula.observacoes || '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                html = '<p class="text-muted">Este aluno não possui matrículas.</p>';
+            }
+            
+            document.getElementById('matriculas-list').innerHTML = html;
+            
+            // Abrir o modal
+            const modal = new bootstrap.Modal(document.getElementById('matriculasAlunoModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ Erro ao buscar matrículas do aluno:', error);
+            alert('Erro ao carregar matrículas do aluno.');
+        });
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'ativo': 'success',
+        'concluido': 'primary',
+        'cancelado': 'danger',
+        'trancado': 'warning'
+    };
+    return colors[status] || 'secondary';
 }
 
 function salvarNovoAluno() {

@@ -194,6 +194,69 @@ def novo_curso():
     
     return render_template('cursos/novo.html', form=form)
 
+@bp.route('/cursos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_curso(id):
+    print(f"✏️ Processando edição do curso ID: {id}")
+    
+    if not current_user.is_admin:
+        flash('Apenas administradores podem editar cursos', 'danger')
+        return redirect(url_for('main.listar_cursos'))
+    
+    curso = Curso.query.get_or_404(id)
+    form = FormCurso(obj=curso)
+    
+    if form.validate_on_submit():
+        print("📝 Formulário de edição de curso validado com sucesso!")
+        
+        # Atualizar dados do curso
+        curso.nome = form.nome.data
+        curso.descricao = form.descricao.data
+        curso.duracao_meses = form.duracao_meses.data
+        curso.valor_mensalidade = form.valor_mensalidade.data
+        curso.ativo = form.ativo.data
+        
+        # Salvar alterações
+        print("💾 Atualizando curso no banco de dados...")
+        db.session.commit()
+        print("✅ Curso atualizado com sucesso!")
+        
+        flash('Curso atualizado com sucesso!', 'success')
+        return redirect(url_for('main.listar_cursos'))
+    
+    if request.method == 'POST':
+        print("❌ Formulário de edição com erros de validação")
+        for field, errors in form.errors.items():
+            print(f"⚠️ Erro no campo '{field}': {errors}")
+    
+    return render_template('cursos/editar.html', form=form, curso=curso)
+
+@bp.route('/cursos/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_curso(id):
+    print(f"🗑️ Processando exclusão do curso ID: {id}")
+    
+    if not current_user.is_admin:
+        flash('Apenas administradores podem excluir cursos', 'danger')
+        return redirect(url_for('main.listar_cursos'))
+    
+    curso = Curso.query.get_or_404(id)
+    
+    # Verificar se existem matrículas ativas neste curso
+    matriculas_ativas = Matricula.query.filter_by(curso_id=id, status='ativo').count()
+    if matriculas_ativas > 0:
+        flash(f'Não é possível excluir este curso pois existem {matriculas_ativas} matrícula(s) ativa(s)', 'danger')
+        return redirect(url_for('main.listar_cursos'))
+    
+    # Excluir curso
+    print(f"💣 Excluindo curso: {curso.nome}")
+    db.session.delete(curso)
+    db.session.commit()
+    print("✅ Curso excluído com sucesso!")
+    
+    flash('Curso excluído com sucesso!', 'success')
+    return redirect(url_for('main.listar_cursos'))
+
 @bp.route('/matriculas')
 @login_required
 def listar_matriculas():
@@ -321,4 +384,93 @@ def relatorios():
         traceback.print_exc()
         return f"Erro ao gerar relatórios: {str(e)}", 500
 
-# ... (manter as outras rotas existentes)
+@bp.route('/usuarios/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_usuario(id):
+    print(f"✏️ Processando edição do usuário ID: {id}")
+    
+    if not current_user.is_admin:
+        flash('Apenas administradores podem editar usuários', 'danger')
+        return redirect(url_for('main.listar_usuarios'))
+    
+    usuario = Usuario.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        # Atualizar dados do usuário
+        usuario.nome_completo = request.form.get('nome_completo', usuario.nome_completo)
+        usuario.email = request.form.get('email', usuario.email)
+        usuario.is_admin = 'is_admin' in request.form
+        usuario.ativo = 'ativo' in request.form
+        
+        db.session.commit()
+        print(f"✅ Usuário {usuario.username} atualizado com sucesso!")
+        flash('Usuário atualizado com sucesso!', 'success')
+        return redirect(url_for('main.listar_usuarios'))
+    
+    return render_template('auth/editar_usuario.html', usuario=usuario)
+
+@bp.route('/usuarios/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_usuario(id):
+    print(f"🗑️ Processando exclusão do usuário ID: {id}")
+    
+    if not current_user.is_admin:
+        flash('Apenas administradores podem excluir usuários', 'danger')
+        return redirect(url_for('main.listar_usuarios'))
+    
+    usuario = Usuario.query.get_or_404(id)
+    
+    # Impedir exclusão do próprio usuário
+    if usuario.id == current_user.id:
+        flash('Você não pode excluir seu próprio usuário', 'danger')
+        return redirect(url_for('main.listar_usuarios'))
+    
+    # Excluir usuário
+    print(f"💣 Excluindo usuário: {usuario.username}")
+    db.session.delete(usuario)
+    db.session.commit()
+    print("✅ Usuário excluído com sucesso!")
+    
+    flash('Usuário excluído com sucesso!', 'success')
+    return redirect(url_for('main.listar_usuarios'))
+
+@bp.route('/alunos/<int:id>/matriculas')
+@login_required
+def get_matriculas_aluno(id):
+    print(f"📤 Buscando matrículas do aluno ID: {id}")
+    aluno = Aluno.query.get_or_404(id)
+    
+    matriculas = Matricula.query.filter_by(aluno_id=id).all()
+    
+    matriculas_data = []
+    for matricula in matriculas:
+        matriculas_data.append({
+            'id': matricula.id,
+            'curso_nome': matricula.curso.nome,
+            'data_matricula': matricula.data_matricula.isoformat(),
+            'status': matricula.status,
+            'observacoes': matricula.observacoes
+        })
+    
+    return jsonify({'matriculas': matriculas_data})
+
+@bp.route('/cursos/<int:id>/matriculas')
+@login_required
+def get_matriculas_curso(id):
+    print(f"📤 Buscando matrículas do curso ID: {id}")
+    curso = Curso.query.get_or_404(id)
+    
+    matriculas = Matricula.query.filter_by(curso_id=id).all()
+    
+    matriculas_data = []
+    for matricula in matriculas:
+        matriculas_data.append({
+            'id': matricula.id,
+            'aluno_nome': matricula.aluno.nome,
+            'aluno_matricula': matricula.aluno.matricula,
+            'data_matricula': matricula.data_matricula.isoformat(),
+            'status': matricula.status,
+            'observacoes': matricula.observacoes
+        })
+    
+    return jsonify({'matriculas': matriculas_data})

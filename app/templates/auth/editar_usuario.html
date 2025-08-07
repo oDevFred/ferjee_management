@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuário - FERJEE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-edit"></i> Editar Usuário</h3>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Usuário</label>
+                            <input type="text" class="form-control" value="{{ usuario.username }}" readonly>
+                            <small class="text-muted">O nome de usuário não pode ser alterado</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" name="nome_completo" value="{{ usuario.nome_completo }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" class="form-control" name="email" value="{{ usuario.email }}" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" name="is_admin" id="is_admin" {% if usuario.is_admin %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_admin">
+                                        Administrador
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" name="ativo" id="ativo" {% if usuario.ativo %}checked{% endif %}>
+                                    <label class="form-check-label" for="ativo">
+                                        Ativo
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.listar_usuarios') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salvar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
